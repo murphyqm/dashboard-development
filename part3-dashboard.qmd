@@ -1,0 +1,23 @@
+---
+title: 3. Dashboard
+---
+
+Sometimes additional layers of control are required that are not possible through a purely static webpage and interactive map. Features such as:
+
+- Advanced filtering of different datasets
+- Statistical analysis of the filtered data
+
+require a hosted dashboard with a server.
+
+A useful rule-of-thumb to decide on whether a fully-fledged dashboard is required is:
+
+1. If you are presenting results and are illustrating your analysis and conclusions, often a static page (with multiple different interactive maps) may suffice.
+2. If you are building a **tool** to enable users to dig into the data and perform analyses/make judgements, a dashboard may be required.
+
+## Developing the dashboard: step by step
+
+In the last section, we looked at building some graphics that are disconnected from each other, in a Jupyter notebook. In this section we will look in more detail at linking these plots and tying them together with reactive inputs/outputs: in other words, having them update when a user filters data.
+
+### 1. Setting up your Jupyter notebook
+
+Dash apps can be built entirely within a single cell in a Jupyter notebook. Because apps require a server to run in the background, they cannot be rendered here in this static webpage.
