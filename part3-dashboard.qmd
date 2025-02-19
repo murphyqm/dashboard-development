@@ -1,6 +1,17 @@
 ---
 title: 3. Dashboard
+format:
+  html:
+    code-fold: true
+jupyter: python3
 ---
+
+```{python}
+#| echo: false
+#| output: false
+import plotly.io as pio
+pio.renderers.default = 'iframe'
+```
 
 Sometimes additional layers of control are required that are not possible through a purely static webpage and interactive map. Features such as:
 
@@ -20,4 +31,191 @@ In the last section, we looked at building some graphics that are disconnected f
 
 ### 1. Setting up your Jupyter notebook
 
-Dash apps can be built entirely within a single cell in a Jupyter notebook. Because apps require a server to run in the background, they cannot be rendered here in this static webpage.
+Dash apps can be built entirely within a single cell in a Jupyter notebook. Because apps require a server to run in the background, they cannot be rendered here in this static webpage, however, you can launch the notebook in Google Colab using the button below:
+
+<a target="_blank" href="https://colab.research.google.com/github/murphyqm/dashboard-development/blob/main/jupyter-notebooks/geospatial_in_dash_2.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
+
+Keep reading for some details on how to set this up locally vs. on Colab.
+
+#### Installing Dash
+
+In order to run a Dash app from a notebook cell, you need to have Dash installed in your environment. If you're running the notebook locally, this just means you need to ensure the Dash library is in your environment. When running on Colab, Dash isn't automatically available, so you need to use `pip` to install it:
+
+```{.python code-line-numbers="true"}
+!pip install dash                                           # <1>
+from dash import Dash, html, dcc, callback, Output, Input   # <2>
+```
+1. Only use this line if running from Colab. The `!` essentially tells the Colab notebook you want to talk to the terminal of the underlying Linux machine, and do `pip install dash`. If you are running this locally, just ensure that Dash is in your Python environment.
+2. Then, you have to import all the relevant modules from Dash. If you are running this locally, start with this line.
+
+
+#### Import other libraries
+
+```{python code-line-numbers="true"}
+import plotly.express as px                                     # <1>
+import pandas as pd                                             # <1>
+import plotly.graph_objects as go                               # <1>
+
+quakes = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/earthquakes-23k.csv')                                                   # <2>
+
+```
+1. I've imported these other modules to allow me to import the data and plot it to make sure I know what I'm doing before I put it in an app.
+2. This is an example dataset that I'm using.
+
+Now that our notebook is set up with the modules and data we need, let's get on to prototyping the contents of the dashboard.
+
+### 2. Check the data, and plot the different features you want in the app
+
+Often it's a good idea to plot the various different data graphics you want to include in your dashboard individually. First, I'm going to double check that the data is what I expect.
+
+What column headers are in the dataset?
+
+```{python code-line-numbers="true"}
+quakes.columns
+```
+
+How big is the dataframe?
+
+```{python code-line-numbers="true"}
+quakes.shape
+```
+
+#### Create some individual plots
+
+Let's say that in our app, we want to show the recorded earthquakes as a scatterplot, with the magnitude shown in the colour of the point and additionally as a hover tooltip. Let's get that up and working in Plotly first, before trying to put it in an app!
+
+```{python code-line-numbers="true"}
+fig = go.Figure(go.Scattermap(lat=quakes.Latitude, lon=quakes.Longitude, mode='markers',
+    text=quakes["Magnitude"],
+    marker=dict(
+        size=10,
+        color=quakes.Magnitude, #set color equal to a variable
+        opacity=0.4,
+        colorscale='Viridis', # one of plotly colorscales
+        showscale=True
+    )))
+fig.update_layout(map_style="carto-positron", map_center_lon=180)
+fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+fig.show()
+```
+
+Ok, that's looking how we want it to (there's some more thought needed here if you're displaying points like this, that are dense and overlapping, but that's a separate discussion).
+
+### 3. Turn the plot into an app!
+
+Ok, so now that we have created the plot we want, let's turn it into a very very simple app. Again, this won't be able to run here, so you'll have to launch the notebook in Colab (see the link at the top) to view.
+
+Even though it can't run here, I've added the code for the app here and annotated it; hopefully this will be helpful in working out how to build your own.
+
+:::{.callout-note}
+One key thing here is that the entire app needs to sit inside a single cell/code-block in your notebook - while dataframes can be loaded outside this cell, all `@callback` instances must be in the same cell. Also, only have one cell in your notebook with a Dash app inside it; the notebook shares port forwarding and it will get annoyed at you and tell you to close it down. If this happens, delete all but one of your app cells, and restart the Kernel - essentially, turn it off and on again!
+:::
+
+Note: use the copy clipboard icon in the top right corner to copy without interference from annotation notes.
+
+```{.python code-line-numbers="true"}
+app = Dash() # <1>
+
+app.layout = [ # <2>
+    html.H1(children='Title of Dash App', style={'textAlign':'center'}),
+    dcc.RangeSlider(min=quakes.Magnitude.min(),
+                    max=quakes.Magnitude.max(),
+                    step=0.5,
+                    value=[quakes.Magnitude.min(), quakes.Magnitude.max()],
+                    id='magnitude-range'),
+    dcc.Graph(id='graph-content')
+]
+
+@callback(  # <3>
+    Output('graph-content', 'figure'),
+    Input('magnitude-range', 'value')
+)
+def update_graph(value): # <4>
+    df = quakes[(quakes.Magnitude>=value[0]) & (quakes.Magnitude<=value[1])] # <5>
+    fig = go.Figure(
+        go.Scattermap(lat=df.Latitude, lon=df.Longitude, mode='markers', # <6>
+        text=df["Magnitude"],
+        marker=dict(
+            size=10,
+            color=df.Magnitude, #set color equal to a variable
+            cmin=quakes.Magnitude.min(), # <7>
+            cmax=quakes.Magnitude.max(), # <7>
+            opacity=0.4,
+            colorscale='Viridis', # one of plotly colorscales
+            showscale=True
+        )))
+    fig.update_layout(map_style="carto-positron", map_center_lon=180)
+    fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+    return fig # <8>
+
+if __name__ == '__main__': # <9>
+    app.run(debug=True)
+```
+1. This creates the app "object", which is essentially a box that contains everything we need, including any text shown, interactive toggles, and our plots.
+2. This very simply, in order, tells us what our app will show. First, there will be a big html header that's centre-aligned; on the next line we will have a "range slider", which is an input widget provided by Dash that lets you select a range of numbers, and the output of these numbers has an "id label" that we've set to `"magnitude-range"`; on the next line we will have a graph of some kind, this graph has an "id label" that we've set to `"graph-content"`.
+3. This "callback" decorator is what makes this an *app* in comparison to the static plots on the previous page. This basically tells us that we have two linked pieces: when the object labeled `"magnitude-range"` changes, we use the `"value"` (the output numbers from the range slider) to rerun the function attached to `"graph-content"`, which will plot a new figure.
+4. In order to make our plot *reactive*, that is in order to make it respond to the change in the range slider, we need to put it inside a function. You'll see that the figure plotting script inside this function is very similar to the one we already made above for our static plot, with a few key differences.
+5. Here's one key difference: previously, we just plotted the whole `quakes` dataframe. In this line, we're saying that we just want a bit that's in between the two values output by the range slider, and we want to save that reduced chunk with the name `df`.
+6. This is then our next change - we search and replace `quakes` with `df` so that our plot just uses the new, smaller, reactive subset.
+7. This is another change - we want the colour range to use the original max and min of the full dataframe, not the new reduced subsection, so we need to set maximum and minimum values.
+8. Instead of using `fig.show()`, we return the figure object because we've already essentially run `show()` at the beginning with `dcc.Graph(id='graph-content')`.
+9. This bit essentially tells the notebook/the script (if it's being run outside of a notebook) that if the entire script is run, we intend to run the app function. In this case, because we're building the app, we've put it in *debug* mode, which means it will show us detailed error messages if something goes wrong - something we'll probably want to switch off before sharing so our users don't get confusing and complex Python errors thrown at them.
+
+### 4. Test out the functionality
+
+This can be a useful playground for figuring out how to set up the app, as Jupyter notebook does all the work of setting up a server in the background.
+
+When you're ready to run the app, you only need to save the content of this cell into a Python file along with the imports and data loading, and run it with a Python server, something we'll deal with in the next section.
+
+You can check it runs by closing down your other notebooks, creating a new notebook (on Colab or locally), and copying and pasting the entire app into a single cell and making sure it runs. Test it with this snippet:
+
+```{.python code-line-numbers="true" filename="app_name.py"}
+!pip install dash # <0>
+from dash import Dash, html, dcc, callback, Output, Input       # <1>
+import pandas as pd                                             # <1>
+import plotly.graph_objects as go                               # <1>
+
+quakes = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/earthquakes-23k.csv') # <2>
+
+app = Dash()
+
+app.layout = [
+    html.H1(children='Title of Dash App', style={'textAlign':'center'}),
+    dcc.RangeSlider(min=quakes.Magnitude.min(),
+                    max=quakes.Magnitude.max(),
+                    step=0.5,
+                    value=[quakes.Magnitude.min(), quakes.Magnitude.max()],
+                    id='magnitude-range'),
+    dcc.Graph(id='graph-content')
+]
+
+@callback(  
+    Output('graph-content', 'figure'),
+    Input('magnitude-range', 'value')
+)
+def update_graph(value): 
+    df = quakes[(quakes.Magnitude>=value[0]) & (quakes.Magnitude<=value[1])] 
+    fig = go.Figure(
+        go.Scattermap(lat=df.Latitude, lon=df.Longitude, mode='markers', 
+        text=df["Magnitude"],
+        marker=dict(
+            size=10,
+            color=df.Magnitude,
+            cmin=quakes.Magnitude.min(),
+            cmax=quakes.Magnitude.max(), 
+            opacity=0.4,
+            colorscale='Viridis',
+            showscale=True
+        )))
+    fig.update_layout(map_style="carto-positron", map_center_lon=180)
+    fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+    return fig # <8>
+
+if __name__ == '__main__':
+    app.run(debug=True)
+```
+0. Remove this line when saving out as a Python file!
+1. You need to add an import statement before you save this as a standalone `.py` file!
+2. You also need to load in your data.

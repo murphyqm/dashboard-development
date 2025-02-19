@@ -6,6 +6,13 @@ format:
 jupyter: python3
 ---
 
+```{python}
+#| echo: false
+#| output: false
+import plotly.io as pio
+pio.renderers.default = 'iframe'
+```
+
 There are multiple different Python plotting frameworks and associated dashboard libraries. One popular option is the Plotly plotting library, which integrates nicely with the Dash dashboard library.
 
 Plotly allows a range of interactive plots to be built in a relatively simple way. The examples below have some basic interactivity that can be rendered on a static page, but more in-depth interactivity (such as being able to filter the data and show the results) requires some compute power (and so needs to be run on a server).
@@ -31,9 +38,6 @@ If you envision your dashboard to contain multiple different linked graphics, it
 ```{python}
 
 import plotly.graph_objects as go
-import plotly.io as pio
-pio.renderers.default = 'iframe'
-
 import pandas as pd
 
 df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/2011_february_us_airport_traffic.csv')
@@ -85,6 +89,7 @@ fig.show()
 ```
 
 
+## Interactions in static plots
 
 
 ```{python}
@@ -179,6 +184,8 @@ fig.update_layout(
 
 fig.show()
 ```
+
+## View options in static plots
 
 ```{python}
 
