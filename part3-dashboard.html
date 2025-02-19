@@ -20,10 +20,44 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="site_libs/quarto-nav/headroom.min.js"></script>
 <script src="site_libs/clipboard/clipboard.min.js"></script>
 <script src="site_libs/quarto-search/autocomplete.umd.js"></script>
@@ -66,6 +100,9 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
 
 </head>
@@ -122,6 +159,9 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#developing-the-dashboard-step-by-step" id="toc-developing-the-dashboard-step-by-step" class="nav-link active" data-scroll-target="#developing-the-dashboard-step-by-step">Developing the dashboard: step by step</a>
   <ul class="collapse">
   <li><a href="#setting-up-your-jupyter-notebook" id="toc-setting-up-your-jupyter-notebook" class="nav-link" data-scroll-target="#setting-up-your-jupyter-notebook">1. Setting up your Jupyter notebook</a></li>
+  <li><a href="#check-the-data-and-plot-the-different-features-you-want-in-the-app" id="toc-check-the-data-and-plot-the-different-features-you-want-in-the-app" class="nav-link" data-scroll-target="#check-the-data-and-plot-the-different-features-you-want-in-the-app">2. Check the data, and plot the different features you want in the app</a></li>
+  <li><a href="#turn-the-plot-into-an-app" id="toc-turn-the-plot-into-an-app" class="nav-link" data-scroll-target="#turn-the-plot-into-an-app">3. Turn the plot into an app!</a></li>
+  <li><a href="#test-out-the-functionality" id="toc-test-out-the-functionality" class="nav-link" data-scroll-target="#test-out-the-functionality">4. Test out the functionality</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -164,7 +204,261 @@ ul.task-list li input[type="checkbox"] {
 <p>In the last section, we looked at building some graphics that are disconnected from each other, in a Jupyter notebook. In this section we will look in more detail at linking these plots and tying them together with reactive inputs/outputs: in other words, having them update when a user filters data.</p>
 <section id="setting-up-your-jupyter-notebook" class="level3">
 <h3 class="anchored" data-anchor-id="setting-up-your-jupyter-notebook">1. Setting up your Jupyter notebook</h3>
-<p>Dash apps can be built entirely within a single cell in a Jupyter notebook. Because apps require a server to run in the background, they cannot be rendered here in this static webpage.</p>
+<p>Dash apps can be built entirely within a single cell in a Jupyter notebook. Because apps require a server to run in the background, they cannot be rendered here in this static webpage, however, you can launch the notebook in Google Colab using the button below:</p>
+<p><a target="_blank" href="https://colab.research.google.com/github/murphyqm/dashboard-development/blob/main/jupyter-notebooks/geospatial_in_dash_2.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"> </a></p>
+<p>Keep reading for some details on how to set this up locally vs.&nbsp;on Colab.</p>
+<section id="installing-dash" class="level4">
+<h4 class="anchored" data-anchor-id="installing-dash">Installing Dash</h4>
+<p>In order to run a Dash app from a notebook cell, you need to have Dash installed in your environment. If you’re running the notebook locally, this just means you need to ensure the Dash library is in your environment. When running on Colab, Dash isn’t automatically available, so you need to use <code>pip</code> to install it:</p>
+<div class="sourceCode" id="annotated-cell-1"><pre class="sourceCode numberSource python code-annotation-code number-lines code-with-copy code-annotated"><code class="sourceCode python"><a class="code-annotation-anchor" data-target-cell="annotated-cell-1" data-target-annotation="1" onclick="event.preventDefault();">1</a><span id="annotated-cell-1-1" class="code-annotation-target"><a href="#annotated-cell-1-1"></a><span class="op">!</span>pip install dash</span>
+<a class="code-annotation-anchor" data-target-cell="annotated-cell-1" data-target-annotation="2" onclick="event.preventDefault();">2</a><span id="annotated-cell-1-2" class="code-annotation-target"><a href="#annotated-cell-1-2"></a><span class="im">from</span> dash <span class="im">import</span> Dash, html, dcc, callback, Output, Input</span><div class="code-annotation-gutter-bg"></div><div class="code-annotation-gutter"></div></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<dl class="code-annotation-container-grid">
+<dt data-target-cell="annotated-cell-1" data-target-annotation="1">1</dt>
+<dd>
+<span data-code-cell="annotated-cell-1" data-code-lines="1" data-code-annotation="1">Only use this line if running from Colab. The <code>!</code> essentially tells the Colab notebook you want to talk to the terminal of the underlying Linux machine, and do <code>pip install dash</code>. If you are running this locally, just ensure that Dash is in your Python environment.</span>
+</dd>
+<dt data-target-cell="annotated-cell-1" data-target-annotation="2">2</dt>
+<dd>
+<span data-code-cell="annotated-cell-1" data-code-lines="2" data-code-annotation="2">Then, you have to import all the relevant modules from Dash. If you are running this locally, start with this line.</span>
+</dd>
+</dl>
+</section>
+<section id="import-other-libraries" class="level4">
+<h4 class="anchored" data-anchor-id="import-other-libraries">Import other libraries</h4>
+<div id="b874771e" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="annotated-cell-2"><pre class="sourceCode python code-annotation-code code-with-copy code-annotated"><code class="sourceCode python"><a class="code-annotation-anchor" data-target-cell="annotated-cell-2" data-target-annotation="1" onclick="event.preventDefault();">1</a><span id="annotated-cell-2-1" class="code-annotation-target"><a href="#annotated-cell-2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.express <span class="im">as</span> px</span>
+<span id="annotated-cell-2-2"><a href="#annotated-cell-2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="annotated-cell-2-3"><a href="#annotated-cell-2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
+<span id="annotated-cell-2-4"><a href="#annotated-cell-2-4" aria-hidden="true" tabindex="-1"></a></span>
+<a class="code-annotation-anchor" data-target-cell="annotated-cell-2" data-target-annotation="2" onclick="event.preventDefault();">2</a><span id="annotated-cell-2-5" class="code-annotation-target"><a href="#annotated-cell-2-5" aria-hidden="true" tabindex="-1"></a>quakes <span class="op">=</span> pd.read_csv(<span class="st">'https://raw.githubusercontent.com/plotly/datasets/master/earthquakes-23k.csv'</span>)</span><div class="code-annotation-gutter-bg"></div><div class="code-annotation-gutter"></div></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-annotation">
+<dl class="code-annotation-container-grid">
+<dt data-target-cell="annotated-cell-2" data-target-annotation="1">1</dt>
+<dd>
+<span data-code-cell="annotated-cell-2" data-code-lines="1,2,3" data-code-annotation="1">I’ve imported these other modules to allow me to import the data and plot it to make sure I know what I’m doing before I put it in an app.</span>
+</dd>
+<dt data-target-cell="annotated-cell-2" data-target-annotation="2">2</dt>
+<dd>
+<span data-code-cell="annotated-cell-2" data-code-lines="5" data-code-annotation="2">This is an example dataset that I’m using.</span>
+</dd>
+</dl>
+</div>
+</div>
+<p>Now that our notebook is set up with the modules and data we need, let’s get on to prototyping the contents of the dashboard.</p>
+</section>
+</section>
+<section id="check-the-data-and-plot-the-different-features-you-want-in-the-app" class="level3">
+<h3 class="anchored" data-anchor-id="check-the-data-and-plot-the-different-features-you-want-in-the-app">2. Check the data, and plot the different features you want in the app</h3>
+<p>Often it’s a good idea to plot the various different data graphics you want to include in your dashboard individually. First, I’m going to double check that the data is what I expect.</p>
+<p>What column headers are in the dataset?</p>
+<div id="2820fa53" class="cell" data-execution_count="3">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>quakes.columns</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<pre><code>Index(['Date', 'Latitude', 'Longitude', 'Magnitude'], dtype='object')</code></pre>
+</div>
+</div>
+<p>How big is the dataframe?</p>
+<div id="aad0b6f8" class="cell" data-execution_count="4">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>quakes.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<pre><code>(23412, 4)</code></pre>
+</div>
+</div>
+<section id="create-some-individual-plots" class="level4">
+<h4 class="anchored" data-anchor-id="create-some-individual-plots">Create some individual plots</h4>
+<p>Let’s say that in our app, we want to show the recorded earthquakes as a scatterplot, with the magnitude shown in the colour of the point and additionally as a hover tooltip. Let’s get that up and working in Plotly first, before trying to put it in an app!</p>
+<div id="01d8cc00" class="cell" data-execution_count="5">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> go.Figure(go.Scattermap(lat<span class="op">=</span>quakes.Latitude, lon<span class="op">=</span>quakes.Longitude, mode<span class="op">=</span><span class="st">'markers'</span>,</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    text<span class="op">=</span>quakes[<span class="st">"Magnitude"</span>],</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        size<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        color<span class="op">=</span>quakes.Magnitude, <span class="co">#set color equal to a variable</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        opacity<span class="op">=</span><span class="fl">0.4</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        colorscale<span class="op">=</span><span class="st">'Viridis'</span>, <span class="co"># one of plotly colorscales</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        showscale<span class="op">=</span><span class="va">True</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    )))</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>fig.update_layout(map_style<span class="op">=</span><span class="st">"carto-positron"</span>, map_center_lon<span class="op">=</span><span class="dv">180</span>)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>fig.update_layout(margin<span class="op">=</span>{<span class="st">"r"</span>:<span class="dv">0</span>,<span class="st">"t"</span>:<span class="dv">0</span>,<span class="st">"l"</span>:<span class="dv">0</span>,<span class="st">"b"</span>:<span class="dv">0</span>})</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<iframe scrolling="no" width="100%" height="545px" src="iframe_figures/figure_5.html" frameborder="0" allowfullscreen=""></iframe>
+</div>
+</div>
+<p>Ok, that’s looking how we want it to (there’s some more thought needed here if you’re displaying points like this, that are dense and overlapping, but that’s a separate discussion).</p>
+</section>
+</section>
+<section id="turn-the-plot-into-an-app" class="level3">
+<h3 class="anchored" data-anchor-id="turn-the-plot-into-an-app">3. Turn the plot into an app!</h3>
+<p>Ok, so now that we have created the plot we want, let’s turn it into a very very simple app. Again, this won’t be able to run here, so you’ll have to launch the notebook in Colab (see the link at the top) to view.</p>
+<p>Even though it can’t run here, I’ve added the code for the app here and annotated it; hopefully this will be helpful in working out how to build your own.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>One key thing here is that the entire app needs to sit inside a single cell/code-block in your notebook - while dataframes can be loaded outside this cell, all <code>@callback</code> instances must be in the same cell. Also, only have one cell in your notebook with a Dash app inside it; the notebook shares port forwarding and it will get annoyed at you and tell you to close it down. If this happens, delete all but one of your app cells, and restart the Kernel - essentially, turn it off and on again!</p>
+</div>
+</div>
+<p>Note: use the copy clipboard icon in the top right corner to copy without interference from annotation notes.</p>
+<div class="sourceCode" id="annotated-cell-6"><pre class="sourceCode numberSource python code-annotation-code number-lines code-with-copy code-annotated"><code class="sourceCode python"><a class="code-annotation-anchor" data-target-cell="annotated-cell-6" data-target-annotation="1" onclick="event.preventDefault();">1</a><span id="annotated-cell-6-1" class="code-annotation-target"><a href="#annotated-cell-6-1"></a>app <span class="op">=</span> Dash()</span>
+<span id="annotated-cell-6-2"><a href="#annotated-cell-6-2"></a></span>
+<a class="code-annotation-anchor" data-target-cell="annotated-cell-6" data-target-annotation="2" onclick="event.preventDefault();">2</a><span id="annotated-cell-6-3" class="code-annotation-target"><a href="#annotated-cell-6-3"></a>app.layout <span class="op">=</span> [</span>
+<span id="annotated-cell-6-4"><a href="#annotated-cell-6-4"></a>    html.H1(children<span class="op">=</span><span class="st">'Title of Dash App'</span>, style<span class="op">=</span>{<span class="st">'textAlign'</span>:<span class="st">'center'</span>}),</span>
+<span id="annotated-cell-6-5"><a href="#annotated-cell-6-5"></a>    dcc.RangeSlider(<span class="bu">min</span><span class="op">=</span>quakes.Magnitude.<span class="bu">min</span>(),</span>
+<span id="annotated-cell-6-6"><a href="#annotated-cell-6-6"></a>                    <span class="bu">max</span><span class="op">=</span>quakes.Magnitude.<span class="bu">max</span>(),</span>
+<span id="annotated-cell-6-7"><a href="#annotated-cell-6-7"></a>                    step<span class="op">=</span><span class="fl">0.5</span>,</span>
+<span id="annotated-cell-6-8"><a href="#annotated-cell-6-8"></a>                    value<span class="op">=</span>[quakes.Magnitude.<span class="bu">min</span>(), quakes.Magnitude.<span class="bu">max</span>()],</span>
+<span id="annotated-cell-6-9"><a href="#annotated-cell-6-9"></a>                    <span class="bu">id</span><span class="op">=</span><span class="st">'magnitude-range'</span>),</span>
+<span id="annotated-cell-6-10"><a href="#annotated-cell-6-10"></a>    dcc.Graph(<span class="bu">id</span><span class="op">=</span><span class="st">'graph-content'</span>)</span>
+<span id="annotated-cell-6-11"><a href="#annotated-cell-6-11"></a>]</span>
+<span id="annotated-cell-6-12"><a href="#annotated-cell-6-12"></a></span>
+<a class="code-annotation-anchor" data-target-cell="annotated-cell-6" data-target-annotation="3" onclick="event.preventDefault();">3</a><span id="annotated-cell-6-13" class="code-annotation-target"><a href="#annotated-cell-6-13"></a><span class="at">@callback</span>(</span>
+<span id="annotated-cell-6-14"><a href="#annotated-cell-6-14"></a>    Output(<span class="st">'graph-content'</span>, <span class="st">'figure'</span>),</span>
+<span id="annotated-cell-6-15"><a href="#annotated-cell-6-15"></a>    Input(<span class="st">'magnitude-range'</span>, <span class="st">'value'</span>)</span>
+<span id="annotated-cell-6-16"><a href="#annotated-cell-6-16"></a>)</span>
+<a class="code-annotation-anchor" data-target-cell="annotated-cell-6" data-target-annotation="4" onclick="event.preventDefault();">4</a><span id="annotated-cell-6-17" class="code-annotation-target"><a href="#annotated-cell-6-17"></a><span class="kw">def</span> update_graph(value):</span>
+<a class="code-annotation-anchor" data-target-cell="annotated-cell-6" data-target-annotation="5" onclick="event.preventDefault();">5</a><span id="annotated-cell-6-18" class="code-annotation-target"><a href="#annotated-cell-6-18"></a>    df <span class="op">=</span> quakes[(quakes.Magnitude<span class="op">&gt;=</span>value[<span class="dv">0</span>]) <span class="op">&amp;</span> (quakes.Magnitude<span class="op">&lt;=</span>value[<span class="dv">1</span>])]</span>
+<span id="annotated-cell-6-19"><a href="#annotated-cell-6-19"></a>    fig <span class="op">=</span> go.Figure(</span>
+<a class="code-annotation-anchor" data-target-cell="annotated-cell-6" data-target-annotation="6" onclick="event.preventDefault();">6</a><span id="annotated-cell-6-20" class="code-annotation-target"><a href="#annotated-cell-6-20"></a>        go.Scattermap(lat<span class="op">=</span>df.Latitude, lon<span class="op">=</span>df.Longitude, mode<span class="op">=</span><span class="st">'markers'</span>,</span>
+<span id="annotated-cell-6-21"><a href="#annotated-cell-6-21"></a>        text<span class="op">=</span>df[<span class="st">"Magnitude"</span>],</span>
+<span id="annotated-cell-6-22"><a href="#annotated-cell-6-22"></a>        marker<span class="op">=</span><span class="bu">dict</span>(</span>
+<span id="annotated-cell-6-23"><a href="#annotated-cell-6-23"></a>            size<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="annotated-cell-6-24"><a href="#annotated-cell-6-24"></a>            color<span class="op">=</span>df.Magnitude, <span class="co">#set color equal to a variable</span></span>
+<a class="code-annotation-anchor" data-target-cell="annotated-cell-6" data-target-annotation="7" onclick="event.preventDefault();">7</a><span id="annotated-cell-6-25" class="code-annotation-target"><a href="#annotated-cell-6-25"></a>            cmin<span class="op">=</span>quakes.Magnitude.<span class="bu">min</span>(),</span>
+<span id="annotated-cell-6-26"><a href="#annotated-cell-6-26"></a>            cmax<span class="op">=</span>quakes.Magnitude.<span class="bu">max</span>(),</span>
+<span id="annotated-cell-6-27"><a href="#annotated-cell-6-27"></a>            opacity<span class="op">=</span><span class="fl">0.4</span>,</span>
+<span id="annotated-cell-6-28"><a href="#annotated-cell-6-28"></a>            colorscale<span class="op">=</span><span class="st">'Viridis'</span>, <span class="co"># one of plotly colorscales</span></span>
+<span id="annotated-cell-6-29"><a href="#annotated-cell-6-29"></a>            showscale<span class="op">=</span><span class="va">True</span></span>
+<span id="annotated-cell-6-30"><a href="#annotated-cell-6-30"></a>        )))</span>
+<span id="annotated-cell-6-31"><a href="#annotated-cell-6-31"></a>    fig.update_layout(map_style<span class="op">=</span><span class="st">"carto-positron"</span>, map_center_lon<span class="op">=</span><span class="dv">180</span>)</span>
+<span id="annotated-cell-6-32"><a href="#annotated-cell-6-32"></a>    fig.update_layout(margin<span class="op">=</span>{<span class="st">"r"</span>:<span class="dv">0</span>,<span class="st">"t"</span>:<span class="dv">0</span>,<span class="st">"l"</span>:<span class="dv">0</span>,<span class="st">"b"</span>:<span class="dv">0</span>})</span>
+<a class="code-annotation-anchor" data-target-cell="annotated-cell-6" data-target-annotation="8" onclick="event.preventDefault();">8</a><span id="annotated-cell-6-33" class="code-annotation-target"><a href="#annotated-cell-6-33"></a>    <span class="cf">return</span> fig</span>
+<span id="annotated-cell-6-34"><a href="#annotated-cell-6-34"></a></span>
+<a class="code-annotation-anchor" data-target-cell="annotated-cell-6" data-target-annotation="9" onclick="event.preventDefault();">9</a><span id="annotated-cell-6-35" class="code-annotation-target"><a href="#annotated-cell-6-35"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">'__main__'</span>:</span>
+<span id="annotated-cell-6-36"><a href="#annotated-cell-6-36"></a>    app.run(debug<span class="op">=</span><span class="va">True</span>)</span><div class="code-annotation-gutter-bg"></div><div class="code-annotation-gutter"></div></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<dl class="code-annotation-container-grid">
+<dt data-target-cell="annotated-cell-6" data-target-annotation="1">1</dt>
+<dd>
+<span data-code-cell="annotated-cell-6" data-code-lines="1" data-code-annotation="1">This creates the app “object”, which is essentially a box that contains everything we need, including any text shown, interactive toggles, and our plots.</span>
+</dd>
+<dt data-target-cell="annotated-cell-6" data-target-annotation="2">2</dt>
+<dd>
+<span data-code-cell="annotated-cell-6" data-code-lines="3" data-code-annotation="2">This very simply, in order, tells us what our app will show. First, there will be a big html header that’s centre-aligned; on the next line we will have a “range slider”, which is an input widget provided by Dash that lets you select a range of numbers, and the output of these numbers has an “id label” that we’ve set to <code>"magnitude-range"</code>; on the next line we will have a graph of some kind, this graph has an “id label” that we’ve set to <code>"graph-content"</code>.</span>
+</dd>
+<dt data-target-cell="annotated-cell-6" data-target-annotation="3">3</dt>
+<dd>
+<span data-code-cell="annotated-cell-6" data-code-lines="13" data-code-annotation="3">This “callback” decorator is what makes this an <em>app</em> in comparison to the static plots on the previous page. This basically tells us that we have two linked pieces: when the object labeled <code>"magnitude-range"</code> changes, we use the <code>"value"</code> (the output numbers from the range slider) to rerun the function attached to <code>"graph-content"</code>, which will plot a new figure.</span>
+</dd>
+<dt data-target-cell="annotated-cell-6" data-target-annotation="4">4</dt>
+<dd>
+<span data-code-cell="annotated-cell-6" data-code-lines="17" data-code-annotation="4">In order to make our plot <em>reactive</em>, that is in order to make it respond to the change in the range slider, we need to put it inside a function. You’ll see that the figure plotting script inside this function is very similar to the one we already made above for our static plot, with a few key differences.</span>
+</dd>
+<dt data-target-cell="annotated-cell-6" data-target-annotation="5">5</dt>
+<dd>
+<span data-code-cell="annotated-cell-6" data-code-lines="18" data-code-annotation="5">Here’s one key difference: previously, we just plotted the whole <code>quakes</code> dataframe. In this line, we’re saying that we just want a bit that’s in between the two values output by the range slider, and we want to save that reduced chunk with the name <code>df</code>.</span>
+</dd>
+<dt data-target-cell="annotated-cell-6" data-target-annotation="6">6</dt>
+<dd>
+<span data-code-cell="annotated-cell-6" data-code-lines="20" data-code-annotation="6">This is then our next change - we search and replace <code>quakes</code> with <code>df</code> so that our plot just uses the new, smaller, reactive subset.</span>
+</dd>
+<dt data-target-cell="annotated-cell-6" data-target-annotation="7">7</dt>
+<dd>
+<span data-code-cell="annotated-cell-6" data-code-lines="25,26" data-code-annotation="7">This is another change - we want the colour range to use the original max and min of the full dataframe, not the new reduced subsection, so we need to set maximum and minimum values.</span>
+</dd>
+<dt data-target-cell="annotated-cell-6" data-target-annotation="8">8</dt>
+<dd>
+<span data-code-cell="annotated-cell-6" data-code-lines="33" data-code-annotation="8">Instead of using <code>fig.show()</code>, we return the figure object because we’ve already essentially run <code>show()</code> at the beginning with <code>dcc.Graph(id='graph-content')</code>.</span>
+</dd>
+<dt data-target-cell="annotated-cell-6" data-target-annotation="9">9</dt>
+<dd>
+<span data-code-cell="annotated-cell-6" data-code-lines="35" data-code-annotation="9">This bit essentially tells the notebook/the script (if it’s being run outside of a notebook) that if the entire script is run, we intend to run the app function. In this case, because we’re building the app, we’ve put it in <em>debug</em> mode, which means it will show us detailed error messages if something goes wrong - something we’ll probably want to switch off before sharing so our users don’t get confusing and complex Python errors thrown at them.</span>
+</dd>
+</dl>
+</section>
+<section id="test-out-the-functionality" class="level3">
+<h3 class="anchored" data-anchor-id="test-out-the-functionality">4. Test out the functionality</h3>
+<p>This can be a useful playground for figuring out how to set up the app, as Jupyter notebook does all the work of setting up a server in the background.</p>
+<p>When you’re ready to run the app, you only need to save the content of this cell into a Python file along with the imports and data loading, and run it with a Python server, something we’ll deal with in the next section.</p>
+<p>You can check it runs by closing down your other notebooks, creating a new notebook (on Colab or locally), and copying and pasting the entire app into a single cell and making sure it runs. Test it with this snippet:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>app_name.py</strong></pre>
+</div>
+<div class="sourceCode" id="annotated-cell-7" data-filename="app_name.py"><pre class="sourceCode numberSource python code-annotation-code number-lines code-with-copy code-annotated"><code class="sourceCode python"><a class="code-annotation-anchor" data-target-cell="annotated-cell-7" data-target-annotation="0" onclick="event.preventDefault();">0</a><span id="annotated-cell-7-1" class="code-annotation-target"><a href="#annotated-cell-7-1"></a><span class="op">!</span>pip install dash</span>
+<a class="code-annotation-anchor" data-target-cell="annotated-cell-7" data-target-annotation="1" onclick="event.preventDefault();">1</a><span id="annotated-cell-7-2" class="code-annotation-target"><a href="#annotated-cell-7-2"></a><span class="im">from</span> dash <span class="im">import</span> Dash, html, dcc, callback, Output, Input</span>
+<span id="annotated-cell-7-3"><a href="#annotated-cell-7-3"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="annotated-cell-7-4"><a href="#annotated-cell-7-4"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
+<span id="annotated-cell-7-5"><a href="#annotated-cell-7-5"></a></span>
+<a class="code-annotation-anchor" data-target-cell="annotated-cell-7" data-target-annotation="2" onclick="event.preventDefault();">2</a><span id="annotated-cell-7-6" class="code-annotation-target"><a href="#annotated-cell-7-6"></a>quakes <span class="op">=</span> pd.read_csv(<span class="st">'https://raw.githubusercontent.com/plotly/datasets/master/earthquakes-23k.csv'</span>)</span>
+<span id="annotated-cell-7-7"><a href="#annotated-cell-7-7"></a></span>
+<span id="annotated-cell-7-8"><a href="#annotated-cell-7-8"></a>app <span class="op">=</span> Dash()</span>
+<span id="annotated-cell-7-9"><a href="#annotated-cell-7-9"></a></span>
+<span id="annotated-cell-7-10"><a href="#annotated-cell-7-10"></a>app.layout <span class="op">=</span> [</span>
+<span id="annotated-cell-7-11"><a href="#annotated-cell-7-11"></a>    html.H1(children<span class="op">=</span><span class="st">'Title of Dash App'</span>, style<span class="op">=</span>{<span class="st">'textAlign'</span>:<span class="st">'center'</span>}),</span>
+<span id="annotated-cell-7-12"><a href="#annotated-cell-7-12"></a>    dcc.RangeSlider(<span class="bu">min</span><span class="op">=</span>quakes.Magnitude.<span class="bu">min</span>(),</span>
+<span id="annotated-cell-7-13"><a href="#annotated-cell-7-13"></a>                    <span class="bu">max</span><span class="op">=</span>quakes.Magnitude.<span class="bu">max</span>(),</span>
+<span id="annotated-cell-7-14"><a href="#annotated-cell-7-14"></a>                    step<span class="op">=</span><span class="fl">0.5</span>,</span>
+<span id="annotated-cell-7-15"><a href="#annotated-cell-7-15"></a>                    value<span class="op">=</span>[quakes.Magnitude.<span class="bu">min</span>(), quakes.Magnitude.<span class="bu">max</span>()],</span>
+<span id="annotated-cell-7-16"><a href="#annotated-cell-7-16"></a>                    <span class="bu">id</span><span class="op">=</span><span class="st">'magnitude-range'</span>),</span>
+<span id="annotated-cell-7-17"><a href="#annotated-cell-7-17"></a>    dcc.Graph(<span class="bu">id</span><span class="op">=</span><span class="st">'graph-content'</span>)</span>
+<span id="annotated-cell-7-18"><a href="#annotated-cell-7-18"></a>]</span>
+<span id="annotated-cell-7-19"><a href="#annotated-cell-7-19"></a></span>
+<span id="annotated-cell-7-20"><a href="#annotated-cell-7-20"></a><span class="at">@callback</span>(  </span>
+<span id="annotated-cell-7-21"><a href="#annotated-cell-7-21"></a>    Output(<span class="st">'graph-content'</span>, <span class="st">'figure'</span>),</span>
+<span id="annotated-cell-7-22"><a href="#annotated-cell-7-22"></a>    Input(<span class="st">'magnitude-range'</span>, <span class="st">'value'</span>)</span>
+<span id="annotated-cell-7-23"><a href="#annotated-cell-7-23"></a>)</span>
+<span id="annotated-cell-7-24"><a href="#annotated-cell-7-24"></a><span class="kw">def</span> update_graph(value): </span>
+<span id="annotated-cell-7-25"><a href="#annotated-cell-7-25"></a>    df <span class="op">=</span> quakes[(quakes.Magnitude<span class="op">&gt;=</span>value[<span class="dv">0</span>]) <span class="op">&amp;</span> (quakes.Magnitude<span class="op">&lt;=</span>value[<span class="dv">1</span>])] </span>
+<span id="annotated-cell-7-26"><a href="#annotated-cell-7-26"></a>    fig <span class="op">=</span> go.Figure(</span>
+<span id="annotated-cell-7-27"><a href="#annotated-cell-7-27"></a>        go.Scattermap(lat<span class="op">=</span>df.Latitude, lon<span class="op">=</span>df.Longitude, mode<span class="op">=</span><span class="st">'markers'</span>, </span>
+<span id="annotated-cell-7-28"><a href="#annotated-cell-7-28"></a>        text<span class="op">=</span>df[<span class="st">"Magnitude"</span>],</span>
+<span id="annotated-cell-7-29"><a href="#annotated-cell-7-29"></a>        marker<span class="op">=</span><span class="bu">dict</span>(</span>
+<span id="annotated-cell-7-30"><a href="#annotated-cell-7-30"></a>            size<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="annotated-cell-7-31"><a href="#annotated-cell-7-31"></a>            color<span class="op">=</span>df.Magnitude,</span>
+<span id="annotated-cell-7-32"><a href="#annotated-cell-7-32"></a>            cmin<span class="op">=</span>quakes.Magnitude.<span class="bu">min</span>(),</span>
+<span id="annotated-cell-7-33"><a href="#annotated-cell-7-33"></a>            cmax<span class="op">=</span>quakes.Magnitude.<span class="bu">max</span>(), </span>
+<span id="annotated-cell-7-34"><a href="#annotated-cell-7-34"></a>            opacity<span class="op">=</span><span class="fl">0.4</span>,</span>
+<span id="annotated-cell-7-35"><a href="#annotated-cell-7-35"></a>            colorscale<span class="op">=</span><span class="st">'Viridis'</span>,</span>
+<span id="annotated-cell-7-36"><a href="#annotated-cell-7-36"></a>            showscale<span class="op">=</span><span class="va">True</span></span>
+<span id="annotated-cell-7-37"><a href="#annotated-cell-7-37"></a>        )))</span>
+<span id="annotated-cell-7-38"><a href="#annotated-cell-7-38"></a>    fig.update_layout(map_style<span class="op">=</span><span class="st">"carto-positron"</span>, map_center_lon<span class="op">=</span><span class="dv">180</span>)</span>
+<span id="annotated-cell-7-39"><a href="#annotated-cell-7-39"></a>    fig.update_layout(margin<span class="op">=</span>{<span class="st">"r"</span>:<span class="dv">0</span>,<span class="st">"t"</span>:<span class="dv">0</span>,<span class="st">"l"</span>:<span class="dv">0</span>,<span class="st">"b"</span>:<span class="dv">0</span>})</span>
+<span id="annotated-cell-7-40"><a href="#annotated-cell-7-40"></a>    <span class="cf">return</span> fig</span>
+<span id="annotated-cell-7-41"><a href="#annotated-cell-7-41"></a></span>
+<span id="annotated-cell-7-42"><a href="#annotated-cell-7-42"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">'__main__'</span>:</span>
+<span id="annotated-cell-7-43"><a href="#annotated-cell-7-43"></a>    app.run(debug<span class="op">=</span><span class="va">True</span>)</span><div class="code-annotation-gutter-bg"></div><div class="code-annotation-gutter"></div></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<dl class="code-annotation-container-grid">
+<dt data-target-cell="annotated-cell-7" data-target-annotation="0">0</dt>
+<dd>
+<span data-code-cell="annotated-cell-7" data-code-lines="1" data-code-annotation="0">Remove this line when saving out as a Python file!</span>
+</dd>
+<dt data-target-cell="annotated-cell-7" data-target-annotation="1">1</dt>
+<dd>
+<span data-code-cell="annotated-cell-7" data-code-lines="2,3,4" data-code-annotation="1">You need to add an import statement before you save this as a standalone <code>.py</code> file!</span>
+</dd>
+<dt data-target-cell="annotated-cell-7" data-target-annotation="2">2</dt>
+<dd>
+<span data-code-cell="annotated-cell-7" data-code-lines="6" data-code-annotation="2">You also need to load in your data.</span>
+</dd>
+</dl>
 
 
 </section>
@@ -261,7 +555,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
+      var filterRegex = new RegExp("https:\/\/murphyqm\.github\.io\/dashboard-development\/");
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
